@@ -2,6 +2,11 @@
 
 A web scraping library inspired by Scrapy using core.async
 
+## Warning
+
+* Mainly an exercise to learn core.async
+* Still a WIP
+
 ## Usage
 
 See the `attercop.core` ns.
