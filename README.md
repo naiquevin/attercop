@@ -1,14 +1,15 @@
 # attercop
 
-A Clojure library designed to ... well, that part is up to you.
+A web scraping library inspired by Scrapy using core.async
 
 ## Usage
 
-FIXME
+See the `attercop.core` ns.
+
+**TODO!** Add detailed usage
 
 ## License
 
-Copyright © 2014 FIXME
+Copyright © 2014 [naiquevin](http://naiquevin.github.io/)
 
-Distributed under the Eclipse Public License either version 1.0 or (at
-your option) any later version.
+Distributed under the Eclipse Public License, the same as Clojure.

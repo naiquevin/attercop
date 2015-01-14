@@ -1,5 +1,5 @@
 (defproject attercop "0.1.0-SNAPSHOT"
-  :description "FIXME: write description"
+  :description "A web scraping library inspired by Scrapy using core.async"
   :url "http://example.com/FIXME"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
