@@ -1,7 +1,7 @@
 (ns attercop.spider
   (:require [clj-http.client :as http]
             [clojure.core.async
-             :refer [chan >! <!! go close! timeout alts!]]
+             :refer [chan >! >!! <!! go thread close! timeout alts!]]
             [clojurewerkz.urly.core :as urly]
             [attercop.enlive-utils :as enlive-utils]))
 
@@ -53,7 +53,7 @@
     ;; take urls from urls channel and put into the response channel
     (go (loop []
           (when-let [url (first (alts! [ch-urls (timeout wait-ms)]))]
-            (go (>! ch-resp (scrape url)))
+            (thread (>!! ch-resp (scrape url)))
             (recur))))
     ;; consume the responses channel and do 2 things:
     ;; 1. scrape the urls and put then into the urls channel,
