@@ -24,7 +24,7 @@
 (defn -main
   [& args]
   (let [config {:name "test-spider"
-                :allowed-domains "localhost"
+                :allowed-domains #{"localhost" "127.0.0.1"}
                 :start-urls ["http://127.0.0.1:5000/"]
                 :rules [[#"[a-zA-Z]+.html$" parse-node]
                         [#"\w+-\d+.html" parse-leaf]]

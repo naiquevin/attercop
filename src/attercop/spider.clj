@@ -11,6 +11,11 @@
   (urly/absolutize href referrer))
 
 
+(defn allowed-domain?
+  [allowed-domains url]
+  (allowed-domains (.getHost (urly/url-like url))))
+
+
 (defn scrape
   [url]
   {:url url
@@ -35,9 +40,11 @@
 
 
 (defn start
-  [{:keys [start-urls rules pipeline wait-ms] :as config}]
+  [{:keys [start-urls allowed-domains rules pipeline wait-ms]
+    :as config}]
   (let [ch-urls (chan)
         ch-resp (chan)
+        valid-url? (partial allowed-domain? allowed-domains)
         callback (partial exec-callback rules)
         pipe (partial pipe-results pipeline)]
     ;; put urls to the urls channel
@@ -56,8 +63,9 @@
                        (first (alts! [ch-resp (timeout wait-ms)]))]
               (let [html-nodes (enlive-utils/html->nodes html)
                     resp (assoc resp :html-nodes html-nodes)
-                    links (map (partial normalize-href url)
-                               (enlive-utils/extract-hrefs html-nodes))]
+                    links (->> (enlive-utils/extract-hrefs html-nodes)
+                               (map (partial normalize-href url))
+                               (filter valid-url?))]
                 (doseq [link links]
                   (go (>! ch-urls link)))
                 (pipe (callback resp)))
