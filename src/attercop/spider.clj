@@ -16,19 +16,38 @@
   (allowed-domains (.getHost (urly/url-like url))))
 
 
-(defn scrape
+(defn fetch-url
   [url]
   {:url url
    :html (:body (http/get url))})
 
 
-(defn exec-callback
+(defn run-scrapers
   [rules {:keys [url html] :as resp}]
   (when-let [rule (first rules)]
-    (let [[regex func] rule]
-      (if (re-find regex url)
-        (func resp)
+    (let [[check {scrape :scrape}] rule]
+      (if (or (= check :default) (re-find check url))
+        (when scrape
+          (scrape resp))
         (recur (rest rules) resp)))))
+
+
+(defn follow-url?
+  [rules url]
+  (when-let [rule (first rules)]
+    (let [[check {follow :follow}] rule]
+      (if (or (= check :default) (re-find check url))
+        (boolean follow)
+        (recur (rest rules) url)))))
+
+
+(defn skip-url?
+  [rules url]
+  (when-let [rule (first rules)]
+    (let [[check {:keys [scrape follow]}] rule]
+      (if (or (= check :default) (re-find check url))
+        (not (or scrape follow))
+        (recur (rest rules) url)))))
 
 
 ;; TODO! Use channels for pipeline as it may involve I/O
@@ -40,35 +59,42 @@
 
 
 (defn start
-  [{:keys [start-urls allowed-domains rules pipeline wait-ms]
+  [{:keys [start-urls allowed-domains rules pipeline max-wait]
     :as config}]
   (let [ch-urls (chan)
         ch-resp (chan)
-        valid-url? (partial allowed-domain? allowed-domains)
-        callback (partial exec-callback rules)
+        scrape (partial run-scrapers rules)
+        start-url-set (set start-urls)
+        follow? (fn [url]
+                  (or (start-url-set url)
+                      (follow-url? rules url)))
+        skip? (fn [url]
+                (or (skip-url? rules url)
+                    (not (allowed-domain? allowed-domains url))))
         pipe (partial pipe-results pipeline)]
     ;; put urls to the urls channel
     (go (doseq [url start-urls]
           (>! ch-urls url)))
     ;; take urls from urls channel and put into the response channel
     (go (loop []
-          (when-let [url (first (alts! [ch-urls (timeout wait-ms)]))]
-            (thread (>!! ch-resp (scrape url)))
+          (when-let [url (first (alts! [ch-urls (timeout max-wait)]))]
+            (thread (>!! ch-resp (fetch-url url)))
             (recur))))
     ;; consume the responses channel and do 2 things:
     ;; 1. scrape the urls and put then into the urls channel,
     ;; 2. apply rules and call the relevant callback fns
     [(go (loop []
             (when-let [{:keys [html url] :as resp}
-                       (first (alts! [ch-resp (timeout wait-ms)]))]
+                       (first (alts! [ch-resp (timeout max-wait)]))]
               (let [html-nodes (enlive-utils/html->nodes html)
                     resp (assoc resp :html-nodes html-nodes)
-                    links (->> (enlive-utils/extract-hrefs html-nodes)
-                               (map (partial normalize-href url))
-                               (filter valid-url?))]
+                    links (when (follow? url)
+                            (->> (enlive-utils/extract-hrefs html-nodes)
+                                 (map (partial normalize-href url))
+                                 (remove skip?)))]
                 (doseq [link links]
                   (go (>! ch-urls link)))
-                (pipe (callback resp)))
+                (pipe (scrape resp)))
               (recur))))
      ch-urls]))
 

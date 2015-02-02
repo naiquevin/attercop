@@ -26,9 +26,12 @@
   (let [config {:name "test-spider"
                 :allowed-domains #{"localhost" "127.0.0.1"}
                 :start-urls ["http://127.0.0.1:5000/"]
-                :rules [[#"[a-zA-Z]+.html$" parse-node]
-                        [#"\w+-\d+.html" parse-leaf]]
+                :rules [[#"[a-zA-Z]+.html$" {:scrape parse-node
+                                             :follow true}]
+                        [#"\w+-\d+.html" {:scrape parse-leaf
+                                          :follow true}]
+                        [:default {:scrape nil :follow false}]]
                 :pipeline [wrap-num-links
                            prn]
-                :wait-ms 5000}]
+                :max-wait 5000}]
     (spider/run config)))
