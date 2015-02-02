@@ -13,11 +13,14 @@ A web scraping library inspired by Scrapy using core.async
 (let [config {:name "test-spider"
               :allowed-domains #{"localhost" "127.0.0.1"}
               :start-urls ["http://127.0.0.1:5000/"]
-              :rules [[#"[a-zA-Z]+.html$" (fn [x] ..)]
-                      [#"\w+-\d+.html" (fn [x] ..)]]
+              :rules [[#"[a-zA-Z]+.html$" {:scrape (fn [x] ..)
+                                           :follow true}]
+                      [#"\w+-\d+.html" {:scrape (fn [x] ..)
+                                        :follow true}]
+                      [:default {:scrape nil :follow false}]]
               :pipeline [(fn [x] ..)
                          prn]
-              :wait-ms 5000}]
+              :max-wait 5000}]
     (attercop.spider/run config))
 ```
 
