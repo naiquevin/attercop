@@ -65,20 +65,23 @@
         ch-resp (chan)
         scrape (partial run-scrapers rules)
         start-url-set (set start-urls)
+        visited-urls (atom #{})
         follow? (fn [url]
                   (or (start-url-set url)
                       (follow-url? rules url)))
         skip? (fn [url]
-                (or (skip-url? rules url)
-                    (not (allowed-domain? allowed-domains url))))
+                (or (@visited-urls url)
+                    (not (allowed-domain? allowed-domains url))
+                    (skip-url? rules url)))
         pipe (partial pipe-results pipeline)]
-    ;; put urls to the urls channel
+    ;; put urls into the urls channel
     (go (doseq [url start-urls]
           (>! ch-urls url)))
     ;; take urls from urls channel and put into the response channel
     (go (loop []
           (when-let [url (first (alts! [ch-urls (timeout max-wait)]))]
             (thread (>!! ch-resp (fetch-url url)))
+            (swap! visited-urls conj url)
             (recur))))
     ;; consume the responses channel and do 2 things:
     ;; 1. scrape the urls and put then into the urls channel,
