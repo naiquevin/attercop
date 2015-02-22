@@ -110,7 +110,8 @@
                                   (remove skip?)))]
                  (doseq [link links]
                    (go (>! ch-urls link)))
-                 (pipe (scrape resp)))
+                 (when-let [result (scrape resp)]
+                   (pipe result)))
                (recur))))
        ch-urls])))
 
