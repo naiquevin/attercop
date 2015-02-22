@@ -2,7 +2,7 @@
 
 A web scraping library inspired by Scrapy using core.async
 
-## Warning
+## Warnings
 
 * Mainly an exercise to learn core.async
 * Still a WIP
@@ -24,22 +24,9 @@ A web scraping library inspired by Scrapy using core.async
     (attercop.spider/run config))
 ```
 
-A running example is included in attercop.core that can be run as follows,
+For a working example, see `attercop.spider-test` in `tests/`. It runs as a core.test test suite but can be run separately in a repl as well.
 
-* First start serving a test site in another terminal
-
-```bash
-$ cd resources/testsite
-$ python -m SimpleHTTPServer 5000
-```
-
-* Then run following in a repl
-
-```clojure
-attercop.core> (-main)
-```
-
-More examples coming soon
+More examples coming soon.
 
 
 ## License
