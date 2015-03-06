@@ -1,5 +1,6 @@
 (ns attercop.spider
-  (:require [org.httpkit.client :as http]
+  (:require [clojure.string :as s]
+            [org.httpkit.client :as http]
             [clojure.core.async
              :refer [chan >! >!! <!! go thread close! timeout alts!]]
             [clojurewerkz.urly.core :as urly]
@@ -9,6 +10,13 @@
 (defn normalize-href
   [referrer href]
   (urly/absolutize href referrer))
+
+
+(defn extract-hrefs
+  [html-nodes]
+  (->> (enlive-utils/extract-hrefs html-nodes)
+       (keep identity)
+       (map s/trim)))
 
 
 (defn allowed-domain?
@@ -105,7 +113,7 @@
                (let [html-nodes (enlive-utils/html->nodes html)
                      resp (assoc resp :html-nodes html-nodes)
                      links (when (follow? url)
-                             (->> (enlive-utils/extract-hrefs html-nodes)
+                             (->> (extract-hrefs html-nodes)
                                   (map (partial normalize-href url))
                                   (remove skip?)))]
                  (doseq [link links]
