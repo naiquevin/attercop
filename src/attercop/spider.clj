@@ -2,7 +2,8 @@
   (:require [clojure.string :as s]
             [org.httpkit.client :as http]
             [clojure.core.async
-             :refer [chan >! >!! <!! go thread close! timeout alts!]]
+             :refer [chan >! >!! <! <!! go thread
+                     close! timeout alts!]]
             [clojurewerkz.urly.core :as urly]
             [attercop.enlive-utils :as enlive-utils]))
 
@@ -75,14 +76,31 @@
       (recur (rest pipeline) new-result))))
 
 
+(defn init-throttle
+  [[max-hits interval]]
+  (let [ch-throttle (chan max-hits)
+        wait (/ interval max-hits)]
+    (go (loop []
+          (let [begin-ts (System/currentTimeMillis)]
+            (dotimes [i max-hits]
+              (alts! [ch-throttle (timeout wait)]))
+            (let [diff-ts (- (System/currentTimeMillis) begin-ts)]
+              (if (< diff-ts interval)
+                (Thread/sleep (- interval diff-ts)))))))
+    ch-throttle))
+
+
 (let [default-config {:max-wait 5000
-                      :handle-status-codes #{}}]
+                      :handle-status-codes #{}
+                      :rate-limit [5 3000]}]
   (defn start
-    [{:keys [start-urls allowed-domains rules pipeline max-wait]
+    [{:keys [start-urls allowed-domains rules
+             pipeline max-wait rate-limit]
       :as config}]
     (let [config (merge default-config config)
           ch-urls (chan)
           ch-resp (chan)
+          ch-throttle (init-throttle rate-limit)
           scrape (partial run-scrapers rules)
           start-url-set (set start-urls)
           visited-urls (atom #{})
@@ -100,6 +118,7 @@
       ;; take urls from urls channel and put into the response channel
       (go (loop []
             (when-let [url (first (alts! [ch-urls (timeout max-wait)]))]
+              (>! ch-throttle :ok)
               (thread (if-let [resp (fetch-url config url)]
                         (>!! ch-resp resp)))
               (swap! visited-urls conj url)

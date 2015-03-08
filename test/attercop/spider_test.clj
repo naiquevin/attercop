@@ -51,7 +51,8 @@
                                                 :follow true}]
                              [:default {:scrape nil :follow false}]]
                      :pipeline [wrap-num-links collect-result]
-                     :max-wait 5000}]
+                     :max-wait 5000
+                     :rate-limit [20 1000]}]
     (start-test-site-server port)
     (spider/run spider-conf)
     (testing "Testing the spider on a test site."
