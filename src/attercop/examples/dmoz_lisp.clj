@@ -23,8 +23,8 @@
          (html/select list [:li]))))
 
 
-(defn run
-  []
+(defn -main
+  [& args]
   (let [config {:name "dmoz scraper for lisp resources"
                 :allowed-domains #{"www.dmoz.org"}
                 :start-urls ["http://www.dmoz.org/Computers/Programming/Languages/"]

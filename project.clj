@@ -7,4 +7,5 @@
                  [org.clojure/core.async "0.1.346.0-17112a-alpha"]
                  [http-kit "2.1.18"]
                  [enlive "1.1.5"]
-                 [clojurewerkz/urly "1.0.0"]])
+                 [clojurewerkz/urly "1.0.0"]]
+  :aot [attercop.examples.dmoz-lisp])

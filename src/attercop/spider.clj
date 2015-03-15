@@ -214,10 +214,23 @@
 
     :handle-status-codes(set) - Additional status codes to be handled
   by the scraper besides the standard valid ones ie. 2xx and 3xx.
+
+    :graceful-shutdown?(bool|integer) - If non-falsy, the spider will
+  be gracefully shutdown. Truthy values may be boolean or a number
+  representing time to wait in milliseconds. If boolean, the timeout
+  will be same as max-wait [default: 5000]
   "
-  [config]
+  [{:keys [graceful-shutdown? max-wait]
+    :as config
+    :or {graceful-shutdown? 5000}}]
   (let [[ch-main ch-urls] (start config)]
-    ;; TODO! catch sigint and sigterm here and close ch-urls. That's
-    ;; why start returns 2 channels, we wait on ch-main, close ch-urls
-    ;; when sigint or sigterm are intercepted.
+    (when graceful-shutdown?
+      (let [wait (if (number? graceful-shutdown?)
+                   graceful-shutdown?
+                   max-wait)]
+        (.addShutdownHook (Runtime/getRuntime)
+                          (Thread. (fn []
+                                     (println "Shutting down gracefully")
+                                     (close! ch-urls)
+                                     (Thread/sleep wait))))))
     (<!! ch-main)))
