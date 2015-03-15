@@ -8,24 +8,32 @@
             [attercop.enlive-utils :as enlive-utils]))
 
 
-(defn normalize-href
+(defn- normalize-href
+  "Normalizes a href attribute so that it always returns an absolute
+  URL. The referrer is used to absolutize the URL in case it's
+  relative.
+
+  eg.
+      (normalize-href \"http://example.com\" \"/foo.html\")
+      ;= http://example.com/foo.html
+  "
   [referrer href]
   (urly/absolutize href referrer))
 
 
-(defn extract-hrefs
+(defn- extract-hrefs
   [html-nodes]
   (->> (enlive-utils/extract-hrefs html-nodes)
        (keep identity)
        (map s/trim)))
 
 
-(defn allowed-domain?
-  [allowed-domains url]
-  (allowed-domains (.getHost (urly/url-like url))))
+(defn- url->domain
+  [url]
+  (.getHost (urly/url-like url)))
 
 
-(defn fetch-url
+(defn- fetch-url
   [{:keys [handle-status-codes user-agent]} url]
   (letfn [(allow? [status]
             (or (and (>= status 200)
@@ -40,8 +48,12 @@
                    (println (format "Error: [%s] %s" status url)))))))
 
 
-(defn run-scrapers
-  [rules {:keys [url html] :as resp}]
+(defn- run-scrapers
+  "Takes a sequence of rules and runs the scraper function on the
+  response for the first rule that matches the url. The rest of the
+  rules in the sequence if any are ignored. A ':default' rule always
+  matches and is expected to be the last rule in the sequence."
+  [rules {:keys [url] :as resp}]
   (when-let [rule (first rules)]
     (let [[check {scrape :scrape}] rule]
       (if (or (= check :default) (re-find check url))
@@ -50,7 +62,10 @@
         (recur (rest rules) resp)))))
 
 
-(defn follow-url?
+(defn- follow-url?
+  "Checks if the given url is to be followed as per the rules. The
+  first rule that matches for the url is considered and the rest are
+  ignored."
   [rules url]
   (when-let [rule (first rules)]
     (let [[check {follow :follow}] rule]
@@ -59,7 +74,10 @@
         (recur (rest rules) url)))))
 
 
-(defn skip-url?
+(defn- skip-url?
+  "Checks if the url can be skipped even if the rule matched for
+  it. This is the case when :scrape and :follow for the rule are both
+  nil."
   [rules url]
   (when-let [rule (first rules)]
     (let [[check {:keys [scrape follow]}] rule]
@@ -69,14 +87,31 @@
 
 
 ;; TODO! Use channels for pipeline as it may involve I/O
-(defn pipe-results
+(defn- pipe-results
+  "Takes a pipeline which is a sequence of functions transforming or
+  doing something with the result and pipes the result through each of
+  the functions in order."
   [pipeline result]
   (when-let [func (first pipeline)]
     (let [new-result (mapv func result)]
       (recur (rest pipeline) new-result))))
 
 
-(defn init-throttle
+(defn- init-throttle
+  "Takes throttle config ie. a vector of 'max-hits' to be allowed in
+  the given 'interval' and sets up throttling mechanism. It returns a
+  core.async channel.
+
+  How throttling works:
+
+  A core.async channel is created with buffer size equal to max-hits
+  and go block is initiated which periodically takes elements from the
+  channel, waiting for some interval which is dynamically calculated
+  if the buffer is getting filled too fast.
+
+  The main thread does a blocking push to the channel everytime
+  before making the HTTP request.
+  "
   [[max-hits interval]]
   (let [ch-throttle (chan max-hits)
         wait (/ interval max-hits)]
@@ -94,6 +129,15 @@
                       :handle-status-codes #{}
                       :rate-limit [5 3000]}]
   (defn start
+    "Starts the spider as per the config. Returns a vector of
+  channels:
+
+      1. a main channel that does the scraping. The caller function
+  can wait for the scraping thread to exit by blocking on this channel.
+
+      2. the urls channel. By closing this channel, the scraper can be
+  gracefully shutdown.
+    "
     [{:keys [start-urls allowed-domains rules
              pipeline max-wait rate-limit]
       :as config}]
@@ -109,7 +153,7 @@
                         (follow-url? rules url)))
           skip? (fn [url]
                   (or (@visited-urls url)
-                      (not (allowed-domain? allowed-domains url))
+                      (not (allowed-domains (url->domain url)))
                       (skip-url? rules url)))
           pipe (partial pipe-results pipeline)]
       ;; put urls into the urls channel
@@ -144,6 +188,33 @@
 
 
 (defn run
+  "Runs the scraper as per the given config. Blocks until all urls are scraped.
+
+  Config
+  ------
+
+    :name(str) - human readable name for the scraper
+
+    :allowed-domains(set) - urls of these will only be considered.
+
+    :start-urls(seq) - scraping/crawling will start with these
+
+    :rules(seq of vectors) - A rule is a vector of two elements, 1. a
+  regular expression or the keyword :default 2. a map with
+  fields :scrape (fn) and :follow (bool)
+
+    :pipeline(seq of functions) - functions transforming or doing
+  something with the scraped results.
+
+    :max-wait(integer) - Timeout for the HTTP requests in ms.
+  [Default: 5000]
+
+    :rate-limit(vector) - [m, i] which means, 'm' max-hits in 'i' ms
+  [Default: [5 3000]]
+
+    :handle-status-codes(set) - Additional status codes to be handled
+  by the scraper besides the standard valid ones ie. 2xx and 3xx.
+  "
   [config]
   (let [[ch-main ch-urls] (start config)]
     ;; TODO! catch sigint and sigterm here and close ch-urls. That's

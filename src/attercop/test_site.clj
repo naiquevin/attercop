@@ -56,6 +56,27 @@
 
 
 (defn sitemap->handler
+  "Takes a sitemap which is a graph of links on the site represented
+  as map nodes and vector of nodes and returns a function that can be
+  passed as the handler to org.httpkit.server/run-server.
+
+  The keys of the sitemap must be keywords. The values must be vectors
+  of either,
+
+    * keywords: If the node is represented as a keyword eg. :foo, then
+  the title and url will be derived as \"Foo\" and \"/foo\"
+  respectively and the status will be 200.
+
+    * maps with keys text, href and status: In this case, text is a
+  mandatory field to be specified + either status or href need to be
+  specified. The remaining field is derived from the other two.
+
+  eg. {:text \"Foo\" :status 404} => \"/status/404 -> 404 Not found
+      {:text \"Foo\" :href \"/foo\" => \"/foo/ -> 200 OK
+
+  Furthermore, a node that's found in any of the value vectors need
+  not be specified as the key in the map.
+  "
   [sitemap]
   (let [routes (mapcat (fn [[x ys]]
                          (conj (filter keyword? ys) x))
@@ -82,12 +103,21 @@
 
 
 (defn start-server
+  "Start a test site server.
+
+  Typical usage:
+
+    (start-server (sitemap->handler sitemap) {:port 5000})
+
+  Note that only one instance of server can be running at a time.
+  "
   [app options]
   {:arglists (:arglists (meta #'run-server))}
   (reset! server (run-server app options)))
 
 
 (defn stop-server
+  "Stop the test server"
   []
   (when-not (nil? @server)
     (@server :timeout 100)
