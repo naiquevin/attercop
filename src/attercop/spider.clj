@@ -193,32 +193,33 @@
   Config
   ------
 
-    :name(str) - human readable name for the scraper
+    :name ; [str] human readable name for the scraper
 
-    :allowed-domains(set) - urls of these will only be considered.
+    :allowed-domains ; [set] urls of these will only be considered.
 
-    :start-urls(seq) - scraping/crawling will start with these
+    :start-urls ; [seq] scraping/crawling will start with these
 
-    :rules(seq of vectors) - A rule is a vector of two elements, 1. a
-  regular expression or the keyword :default 2. a map with
-  fields :scrape (fn) and :follow (bool)
+    :rules ; [seq] A rule is a vector of two elements, 1. a regular
+  expression or the keyword :default 2. a map with fields :scrape (fn)
+  and :follow (bool)
 
-    :pipeline(seq of functions) - functions transforming or doing
-  something with the scraped results.
+    :pipeline ; [seq] functions transforming or doing something with
+  the scraped results.
 
-    :max-wait(integer) - Timeout for the HTTP requests in ms.
+    :max-wait ; [integer] Timeout for the HTTP requests in ms.
   [Default: 5000]
 
-    :rate-limit(vector) - [m, i] which means, 'm' max-hits in 'i' ms
-  [Default: [5 3000]]
+    :rate-limit ; [vector] (Optional) eg. [m, i] which means, 'm'
+  max-hits in 'i' ms [Default: [5 3000]]
 
-    :handle-status-codes(set) - Additional status codes to be handled
-  by the scraper besides the standard valid ones ie. 2xx and 3xx.
+    :handle-status-codes ; [set] (Optional) Additional status codes to
+  be handled by the scraper besides the standard valid ones ie. 2xx
+  and 3xx.
 
-    :graceful-shutdown?(bool|integer) - If non-falsy, the spider will
-  be gracefully shutdown. Truthy values may be boolean or a number
-  representing time to wait in milliseconds. If boolean, the timeout
-  will be same as max-wait [default: 5000]
+    :graceful-shutdown? ; [bool|integer] (Optional) If non-falsy, the
+  spider will be gracefully shutdown. Truthy values may be boolean or
+  a number representing time to wait in milliseconds. If boolean, the
+  timeout will be same as max-wait [default: 5000]
   "
   [{:keys [graceful-shutdown? max-wait]
     :as config
