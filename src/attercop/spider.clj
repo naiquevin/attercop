@@ -121,7 +121,8 @@
               (alts! [ch-throttle (timeout wait)]))
             (let [diff-ts (- (System/currentTimeMillis) begin-ts)]
               (if (< diff-ts interval)
-                (Thread/sleep (- interval diff-ts)))))))
+                (Thread/sleep (- interval diff-ts)))))
+          (recur)))
     ch-throttle))
 
 
