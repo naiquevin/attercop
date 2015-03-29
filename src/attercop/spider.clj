@@ -86,15 +86,13 @@
         (recur (rest rules) url)))))
 
 
-;; TODO! Use channels for pipeline as it may involve I/O
 (defn- pipe-results
   "Takes a pipeline which is a sequence of functions transforming or
   doing something with the result and pipes the result through each of
   the functions in order."
-  [pipeline result]
-  (when-let [func (first pipeline)]
-    (let [new-result (mapv func result)]
-      (recur (rest pipeline) new-result))))
+  [pipeline results]
+  (doseq [result results]
+    (reduce (fn [acc f] (f acc)) result pipeline)))
 
 
 (defn- init-throttle
@@ -182,8 +180,8 @@
                                   (remove skip?)))]
                  (doseq [link links]
                    (go (>! ch-urls link)))
-                 (when-let [result (scrape resp)]
-                   (pipe result)))
+                 (when-let [results (scrape resp)]
+                   (pipe results)))
                (recur))))
        ch-urls])))
 
