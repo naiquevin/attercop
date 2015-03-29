@@ -28,9 +28,9 @@
   (let [config {:name "dmoz scraper for lisp resources"
                 :allowed-domains #{"www.dmoz.org"}
                 :start-urls ["http://www.dmoz.org/Computers/Programming/Languages/"]
-                :rules [[#"Computers/Programming/Languages/Functional/"
+                :rules [[#"^[^?]+Computers/Programming/Languages/Functional/"
                          {:scrape nil :follow true}]
-                        [#"Computers/Programming/Languages/Lisp/?.*"
+                        [#"^[^?]+Computers/Programming/Languages/Lisp/?.*"
                          {:scrape parse :follow false}]
                         [:default {:scrape nil :follow false}]]
                 :pipeline [prn]
