@@ -5,6 +5,7 @@
              :refer [chan >! >!! <! <!! go thread
                      close! timeout alts!]]
             [clojurewerkz.urly.core :as urly]
+            [taoensso.timbre :as timbre]
             [attercop.enlive-utils :as enlive-utils]))
 
 
@@ -44,8 +45,7 @@
                (fn [{:keys [status body]}]
                  (if (allow? status)
                    {:url url :html body :status status}
-                   ;; todo! do proper logging here
-                   (println (format "Error: [%s] %s" status url)))))))
+                   (timbre/info (format "Error: [%s] %s" status url)))))))
 
 
 (defn- run-scrapers
@@ -230,7 +230,7 @@
                    max-wait)]
         (.addShutdownHook (Runtime/getRuntime)
                           (Thread. (fn []
-                                     (println "Shutting down gracefully")
+                                     (timbre/info "Shutting down gracefully")
                                      (close! ch-urls)
                                      (Thread/sleep wait))))))
     (<!! ch-main)))
