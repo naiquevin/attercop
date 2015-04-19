@@ -8,4 +8,7 @@
                  [http-kit "2.1.18"]
                  [enlive "1.1.5"]
                  [clojurewerkz/urly "1.0.0"]]
+  :profiles {:dev {:dependencies [[pjstadig/humane-test-output "0.7.0"]]
+                   :injections [(require 'pjstadig.humane-test-output)
+                                (pjstadig.humane-test-output/activate!)]}}
   :aot [attercop.examples.dmoz-lisp])
