@@ -212,8 +212,7 @@
   max-hits in 'i' ms [Default: [5 3000]]
 
     :handle-status-codes ; [set] (Optional) Additional status codes to
-  be handled by the scraper besides the standard valid ones ie. 2xx
-  and 3xx.
+  be handled by the scraper besides the standard valid ones ie. 2xx.
 
     :graceful-shutdown? ; [bool|integer] (Optional) If non-falsy, the
   spider will be gracefully shutdown. Truthy values may be boolean or
