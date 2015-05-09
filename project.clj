@@ -8,7 +8,8 @@
                  [http-kit "2.1.18"]
                  [enlive "1.1.5"]
                  [clojurewerkz/urly "1.0.0"]
-                 [com.taoensso/timbre "3.4.0"]]
+                 [com.taoensso/timbre "3.4.0"]
+                 [slugger "1.0.1"]]
   :profiles {:dev {:dependencies [[pjstadig/humane-test-output "0.7.0"]]
                    :injections [(require 'pjstadig.humane-test-output)
                                 (pjstadig.humane-test-output/activate!)]}}
