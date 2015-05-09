@@ -1,6 +1,6 @@
 (ns attercop.spider-test
   (:require [clojure.test :refer :all]
-            [attercop.test-site :as site]
+            [attercop.mock-site :as site]
             [attercop.enlive-utils :as eu]
             [attercop.spider :as spider]))
 
@@ -8,16 +8,16 @@
 (defn- start-test-site-server
   [port]
   (let [sitemap {:index [:a :b :c :d]
-                 :a [:a-1 :a-2 :a-3 :a-4 {:text "a-5"
+                 :a [:a-1 :a-2 :a-3 :a-4 {:title "a-5"
                                           :status 404}]
-                 :b [:b-1 :b-2]
-                 :c [:c-1 :c-2 :c-3 {:text "Clojure Docs"
+                 :b [:b-1 :b-2 {:title "b-3" :status 500}]
+                 :c [:c-1 :c-2 :c-3 {:title "Clojure Docs"
                                      :href "http://clojure.org/documentation"}]
-                 :d [{:text "Back to home" :href "/index.html"}
+                 :d [{:title "Back to home" :href "/index.html"}
                      :d-1
                      :w-x-s
                      :dont-scrape
-                     {:text "Github" :href "https://github.com/"}]
+                     {:title "Github" :href "https://github.com/"}]
                  :dont-scrape [:e]
                  :e [:e-1]}]
     (site/start-server (site/sitemap->handler sitemap) {:port port})))
@@ -53,17 +53,18 @@
                      :pipeline [wrap-num-links collect-result]
                      :max-wait 5000
                      :rate-limit [20 1000]
-                     :graceful-shutdown? false}]
+                     :graceful-shutdown? true
+                     :handle-status-codes #{500}}]
     (start-test-site-server port)
     (spider/run spider-conf)
     (testing "Testing the spider on a test site."
-      (is (= 17 (count @result)))
+      (is (= 18 (count @result)))
       (is (= (@result "index")
              {:title "index" :links ["a" "b" "c" "d"] :num-links 4}))
       (is (= (@result "a")
              {:title "a" :links ["a-1" "a-2" "a-3" "a-4" "a-5"] :num-links 5}))
       (is (= (@result "b")
-             {:title "b" :links ["b-1" "b-2"] :num-links 2}))
+             {:title "b" :links ["b-1" "b-2" "b-3"] :num-links 3}))
       (is (= (@result "c")
              {:title "c" :links ["c-1" "c-2" "c-3" "Clojure Docs"] :num-links 4}))
       (is (= (@result "d")
