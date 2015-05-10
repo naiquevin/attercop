@@ -6,8 +6,8 @@ A web scraping library inspired by Scrapy using core.async.
 
 I started this project mainly as an exercise for learning
 core.async. I have used scrapy before but it's a big project and
-attercop mostly covers only those features of scrapy that I have used
-myself. Not recommended for production use yet.
+attercop mostly covers only those features of scrapy that I have
+myself used. Not recommended for production use yet.
 
 ## Dependencies
 
@@ -36,9 +36,9 @@ myself. Not recommended for production use yet.
 ```
 
 See `attercop.examples.dmoz-lisp` for a working example. It crawls
-pages on the dmoz directory that are related to lisp based functional
-programming languages and scraps the links to resources for each
-language. It can be run as follows,
+pages on the [dmoz](http://www.dmoz.org/) directory that are related
+to lisp based functional programming languages and scraps the links to
+resources for each language. It can be run as follows,
 
 ```bash
 $ lein trampoline run -m attercop.examples.dmoz_lisp
@@ -46,7 +46,7 @@ $ lein trampoline run -m attercop.examples.dmoz_lisp
 
 ## Spider config
 
-List of the keys that can be specified in the spider config
+List of the keys that can be specified in the spider config:
 
 * **:name** `required` `string`
 
@@ -91,10 +91,12 @@ List of the keys that can be specified in the spider config
    directly called on them).
 
    Besides the above type of rules, there is another special default
-   rule which is recommended to be added as the last rule. It has
-   following structure,
+   rule which is recommended to be added as the last rule in the
+   seq as follows,
 
+   ```
    [:default {:scrape nil :follow false}]
+   ```
 
    This will make sure that the URLs that don't match with any of the
    previous rules will be ignored (both :scrape and :follow falsy). If
@@ -106,12 +108,11 @@ List of the keys that can be specified in the spider config
    A seq of functions which will be called in order for every scraped
    item. The scraped item will be passed to the functions and they
    should return a (may be) modified version of the item which will be
-   passed to the next function in seq. The result of the last function
-   in the seq will be ignored.
+   passed to the next function in the pipeline. The result of the last
+   function in the seq will be ignored.
 
-   Typically you would have functions that would either process the
-   item data or store it in some kind of persistent storage in the
-   pipeline.
+   Typically the pipeline functions would either process the item data
+   or store it somewhere for later use.
 
 * **:max-wait** `optional` `number` `default: 5000`
 
