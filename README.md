@@ -4,19 +4,19 @@ A web scraping library inspired by Scrapy using core.async.
 
 ## Warning
 
-I wrote this mainly as an exercise for learning core.async. I have
-used scrapy before but it's a big project and attercop mostly covers
-only those features of scrapy that I have used myself. Not recommended
-for production use yet.
+I started this project mainly as an exercise for learning
+core.async. I have used scrapy before but it's a big project and
+attercop mostly covers only those features of scrapy that I have used
+myself. Not recommended for production use yet.
 
 ## Dependencies
 
-* core.async
-* http-kit
-* enlive
-* urly
-* timbre
-* slugger
+* [core.async](https://github.com/clojure/core.async)
+* [http-kit](http://www.http-kit.org/)
+* [enlive](https://github.com/cgrand/enlive)
+* [urly](https://github.com/michaelklishin/urly)
+* [timbre](https://github.com/ptaoussanis/timbre)
+* [slugger](https://github.com/pelle/slugger)
 
 ## A pseudo example
 
@@ -35,8 +35,10 @@ for production use yet.
   (attercop.spider/run config))
 ```
 
-See `attercop.examples.dmoz-lisp` for a working example. It can be run
-as follows,
+See `attercop.examples.dmoz-lisp` for a working example. It crawls
+pages on the dmoz directory that are related to lisp based functional
+programming languages and scraps the links to resources for each
+language. It can be run as follows,
 
 ```bash
 $ lein trampoline run -m attercop.examples.dmoz_lisp
@@ -46,20 +48,20 @@ $ lein trampoline run -m attercop.examples.dmoz_lisp
 
 List of the keys that can be specified in the spider config
 
-* **:name** (required) (string)
+* **:name** `required` `string`
 
   A human readable name for the spider.
 
-* **:allowed-domains** (required) (set)
+* **:allowed-domains** `required` `set`
 
   Only URLs of the these domains will be considered for scraping and
   crawling.
 
-* **:start-urls** (required) (seq)
+* **:start-urls** `required` `seq`
 
   The spider will start crawling/scraping with these URLs.
 
-* **:rules** (required) (seq)
+* **:rules** `required` `seq`
 
   This is the most important configuration which is used to define
   what exactly is to be done for URLs matching a particular
@@ -88,7 +90,7 @@ List of the keys that can be specified in the spider config
    `:html-nodes` (these are enlive nodes so enlive functions can be
    directly called on them)
 
-* `:pipeline`: (required) (seq)
+* **:pipeline** `required` `seq`
 
    A seq of functions which will be called in order for every scraped
    item. The scraped item will be passed to the functions and they
@@ -96,29 +98,32 @@ List of the keys that can be specified in the spider config
    passed to the next function in seq. The result of the last function
    in the seq will be ignored.
 
-* `:max-wait`: (optional) (default: 5000)
+   Typically you would have functions that would either process the
+   item data or store it in some kind of persistent storage in the
+   pipeline.
+
+* **:max-wait** `optional` `number` `default: 5000`
 
    The spider will wait for these many ms for the HTTP requests to
    complete. Default is 5000ms.
 
-* `:rate-limit`: (optional) (default: [5 3000])
+* **:rate-limit** `optional` `vector` `default: [5 3000]`
 
    The spider will use this config to rate limit the HTTP requests. A
    value of type `[m, n]` means a maximum of `m` requests will be made
    in `n` ms. The default is 5 requests in 3000ms.
 
-* `:handle-status-codes`: (optional) (set) (default: empty set)
+* **:handle-status-codes** `optional` `set` `default: #{}`
 
    Additional status codes to be handled by the scraper besides the
    standard valid ones ie. 2xx.
 
-* `:graceful-shutdown?`: (optional) (boolean or integer) (default: 5000)
+* **:graceful-shutdown?** `optional` `boolean|number` `default: 5000`
 
    If non-falsy, the spider will be gracefully shutdown ie. all queued
    URLs will be processed before stopping. Truthy values may be
    boolean or a number representing time to wait in milliseconds. If
    boolean, the timeout will be same as max-wait.
-
 
 ## Running tests
 
@@ -126,9 +131,8 @@ List of the keys that can be specified in the spider config
 $ lein test
 ```
 
-
 ## License
 
-Copyright © 2014 [Vineet Naik](http://naiquevin.github.io/)
+Copyright © 2015 [Vineet Naik](http://naiquevin.github.io/)
 
 Distributed under the Eclipse Public License, the same as Clojure.
