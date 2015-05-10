@@ -22,11 +22,15 @@
   (urly/absolutize href referrer))
 
 
+(defn- clean-hrefs
+  [hrefs]
+  (->> (keep identity hrefs)
+       (map s/trim)))
+
+
 (defn- extract-hrefs
   [html-nodes]
-  (->> (enlive-utils/extract-hrefs html-nodes)
-       (keep identity)
-       (map s/trim)))
+  (enlive-utils/extract-hrefs html-nodes))
 
 
 (defn- url->domain
@@ -62,15 +66,15 @@
         (recur (rest rules) resp)))))
 
 
-(defn- follow-url?
-  "Checks if the given url is to be followed as per the rules. The
-  first rule that matches for the url is considered and the rest are
+(defn- follow-rule
+  "Returns the follow rule for the URL as per the rules. The first
+  rule that matches for the url is considered and the rest are
   ignored."
   [rules url]
   (when-let [rule (first rules)]
     (let [[check {follow :follow}] rule]
       (if (or (= check :default) (re-find check url))
-        (boolean follow)
+        follow
         (recur (rest rules) url)))))
 
 
@@ -147,13 +151,19 @@
           scrape (partial run-scrapers rules)
           start-url-set (set start-urls)
           visited-urls (atom #{})
-          follow? (fn [url]
-                    (or (start-url-set url)
-                        (follow-url? rules url)))
           skip? (fn [url]
                   (or (@visited-urls url)
                       (not (allowed-domains (url->domain url)))
                       (skip-url? rules url)))
+          collect-links (fn [{:keys [url html-nodes] :as resp}]
+                          (when-let [follow (or (follow-rule rules url)
+                                                (start-url-set url))]
+                            (->> (if (ifn? follow)
+                                   (follow resp)
+                                   (extract-hrefs html-nodes))
+                                 clean-hrefs
+                                 (map (partial normalize-href url))
+                                 (remove skip?))))
           pipe (partial pipe-results pipeline)]
       ;; put urls into the urls channel
       (go (doseq [url start-urls]
@@ -173,12 +183,8 @@
              (when-let [{:keys [html url] :as resp}
                         (first (alts! [ch-resp (timeout max-wait)]))]
                (let [html-nodes (enlive-utils/html->nodes html)
-                     resp (assoc resp :html-nodes html-nodes)
-                     links (when (follow? url)
-                             (->> (extract-hrefs html-nodes)
-                                  (map (partial normalize-href url))
-                                  (remove skip?)))]
-                 (doseq [link links]
+                     resp (assoc resp :html-nodes html-nodes)]
+                 (doseq [link (collect-links resp)]
                    (go (>! ch-urls link)))
                  (when-let [results (scrape resp)]
                    (pipe results)))
@@ -199,8 +205,8 @@
     :start-urls ; [seq] scraping/crawling will start with these
 
     :rules ; [seq] A rule is a vector of two elements, 1. a regular
-  expression or the keyword :default 2. a map with fields :scrape (fn)
-  and :follow (bool)
+  expression or the keyword :default 2. a map with fields :scrape (fn/nil)
+  and :follow (true/false/fn)
 
     :pipeline ; [seq] functions transforming or doing something with
   the scraped results.
