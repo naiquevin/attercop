@@ -49,7 +49,7 @@
   (swap! result assoc title data))
 
 
-(deftest basic-spider
+(deftest test-basic-spider
   (let [port 5050
         result (atom {})
         spider-conf {:name "test-spider"
@@ -89,7 +89,7 @@
     (stop-test-site-server)))
 
 
-(deftest spider-with-follow-function
+(deftest test-spider-with-follow-function
   []
   (let [port 5050
         result (atom {})
@@ -122,3 +122,15 @@
       (is (nil? (@result "d")))
       (is (nil? (@result "e"))))
     (stop-test-site-server)))
+
+
+(deftest test-ensure-default-rule
+  (testing "Testing ensure-default-rule function"
+    (let [ensure-default-rule #'spider/ensure-default-rule]
+      (is (= (ensure-default-rule {:rules [[]]})
+             {:rules [[]
+                      [:default {:scrape nil, :follow false}]]}))
+      (is (= (ensure-default-rule {:rules [[] [:default {}]]})
+             {:rules [[] [:default {}]]}))
+      (is (= (ensure-default-rule {:rules []})
+             {:rules [[:default {:scrape nil :follow false}]]})))))

@@ -66,6 +66,19 @@
         (recur (rest rules) resp)))))
 
 
+(defn- ensure-default-rule
+  "Ensures that the last rule in the sequence of rules is :default. If
+  it isn't then adds a :default rule with no-op for both scrape and
+  follow."
+  [{:keys [rules] :as config}]
+  (if-not (= (first (last rules)) :default)
+    (update-in config
+               [:rules]
+               conj
+               [:default {:scrape nil :follow false}])
+    config))
+
+
 (defn- follow-rule
   "Returns the follow rule for the URL as per the rules. The first
   rule that matches for the url is considered and the rest are
@@ -141,10 +154,12 @@
       2. the urls channel. By closing this channel, the scraper can be
   gracefully shutdown.
     "
-    [{:keys [start-urls allowed-domains rules
-             pipeline max-wait rate-limit]
-      :as config}]
-    (let [config (merge default-config config)
+    [config]
+    (let [{:keys [start-urls allowed-domains rules
+                  pipeline max-wait rate-limit]
+           :as config}
+          (ensure-default-rule (merge default-config config))
+
           ch-urls (chan)
           ch-resp (chan)
           ch-throttle (init-throttle rate-limit)

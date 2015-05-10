@@ -86,9 +86,20 @@ List of the keys that can be specified in the spider config
       a sequence of urls to crawl.
 
    The function values for both `:scrape` and `:follow` will be called
-   with the response map with keys `:url`, `:status`, `:html` and
+   with the response map having keys `:url`, `:status`, `:html` and
    `:html-nodes` (these are enlive nodes so enlive functions can be
-   directly called on them)
+   directly called on them).
+
+   Besides the above type of rules, there is another special default
+   rule which is recommended to be added as the last rule. It has
+   following structure,
+
+   [:default {:scrape nil :follow false}]
+
+   This will make sure that the URLs that don't match with any of the
+   previous rules will be ignored (both :scrape and :follow falsy). If
+   you forget to add this, then the spider will ensure a no-op default
+   rule is added at the end of the rules sequence.
 
 * **:pipeline** `required` `seq`
 

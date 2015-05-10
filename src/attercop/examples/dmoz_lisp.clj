@@ -31,8 +31,7 @@
                 :rules [[#"^[^?]+Computers/Programming/Languages/Functional/"
                          {:scrape nil :follow true}]
                         [#"^[^?]+Computers/Programming/Languages/Lisp/?.*"
-                         {:scrape parse :follow false}]
-                        [:default {:scrape nil :follow false}]]
+                         {:scrape parse :follow false}]]
                 :pipeline [prn]
                 :max-wait 5000
                 :rate-limit [5 3000]}]
