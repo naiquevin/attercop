@@ -137,6 +137,11 @@ List of the keys that can be specified in the spider config:
    boolean or a number representing time to wait in milliseconds. If
    boolean, the timeout will be same as max-wait.
 
+* **:user-agent** `optional` `string` `default: Attercop (https://github.com/naiquevin/attercop)`
+
+  The User Agent to use when crawling.
+
+
 ## Running tests
 
 ```bash

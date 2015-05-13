@@ -143,7 +143,8 @@
 
 (let [default-config {:max-wait 5000
                       :handle-status-codes #{}
-                      :rate-limit [5 3000]}]
+                      :rate-limit [5 3000]
+                      :user-agent "Attercop (https://github.com/naiquevin/attercop)"}]
   (defn start
     "Starts the spider as per the config. Returns a vector of
   channels:
@@ -239,6 +240,10 @@
   spider will be gracefully shutdown. Truthy values may be boolean or
   a number representing time to wait in milliseconds. If boolean, the
   timeout will be same as max-wait [default: 5000]
+
+    :user-agent ; [string] (Optional)
+  The User Agent to use when crawling. Default value is
+  \"Attercop (https://github.com/naiquevin/attercop)\"
   "
   [{:keys [graceful-shutdown? max-wait]
     :as config
