@@ -9,6 +9,12 @@ core.async. I have used scrapy before but it's a big project and
 attercop mostly covers only those features of scrapy that I have
 myself used. Not recommended for production use yet.
 
+## Leiningen
+
+```clojure
+[attercop "0.1.0-SNAPSHOT"]
+```
+
 ## Dependencies
 
 * [core.async](https://github.com/clojure/core.async)
@@ -147,6 +153,12 @@ List of the keys that can be specified in the spider config:
 ```bash
 $ lein test
 ```
+
+## TODO
+
+* Add support for middlewares (Spider and Downloader as in Scrapy)
+* Respect robots.txt
+
 
 ## License
 
